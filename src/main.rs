@@ -38,22 +38,24 @@ async fn index() -> impl Responder {
         DELETE /hash/{id} -> delete a hash item by id 
 
         ------------（3）注意 ---------------
-        POST/PUT 必须提供全部字段:(例如)
-             
-        curl -X POST   'http://localhost:5000/cargo'   -H 'Content-Type: application/json; charset=utf-8'   -d '{
-            "cid": "",              // cid 字段必须提交，cid实际自动生成，提交时统一写空字符串""
-            "account": "1234567",   // account 必须提交, 为用户id
-            "mkarr": [              // mkarr 必须提交， 为要上链的数据 hash数组，
+        POST/PUT 必须提供全部 [必须] 字段:(例如)
+                     
+        curl -X POST   'http://localhost:5000/cargo'  \
+        -H 'Content-Type: application/json; charset=utf-8' \
+        -d '{
+            "cid": "",              // cid     [PUT必须], [POST缺省值]: "0"
+            "account": "1234567",   // account [POST/PUT必须]
+            "mkarr": [              // mkarr   [POST/PUT必须]  为要上链的数据 hash数组，
                 "1231281",          // 数组每一个成员都是一个文件或者数据的 Hash 摘要值
                 "2323232",
                 "xzzzzzzzy"
             ],
-            "tstz": 12312312,      // tstz 必须提交，tstz实际自动生成，提交时统一为数字: 0
-            "mkroot":"0",          // mkroot 必须提交，实际自动生成，提交时统一为字符串: "0"
-            "blocknum":"0",        // mkroot 必须提交，实际自动生成，提交时统一为字符串: "0"
-            "done": false          // mkroot 必须提交，实际自动生成，提交时统一为布尔值:false
+            "tstz": 12312312,      // tstz   [缺省值]: 0
+            "mkroo
+            t":"0",          // mkroot [缺省值]: "0"
+            "blocknum":"0",        // mkroot [缺省值]: "0"
+            "done": false          // mkroot [缺省值]: false
         }'
-
     "#
     )
 }
