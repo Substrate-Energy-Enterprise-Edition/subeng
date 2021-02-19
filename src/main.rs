@@ -24,18 +24,36 @@ async fn index() -> impl Responder {
         Welcome to   < Hyper Bigdata on Chain SubEng} 
         Openging API:
         ------------ (1) Cargo ------------------
-        GET /cargos -> list all cargo 
+        GET /cargos -> list all cargo  
         POST /cargo -> creat cargo item, 
                        example: { "cid": "123", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
-        GET /cargo/{id} -> list cargo item by cid 
-        PUT /cargo/     -> update cargo item by cid 
+        GET /cargo/{id} -> list cargo item by cid  (find 提交的cid 以"/"单斜杠开头，url参数无需/转义字符)
+        PUT /cargo/     -> update cargo item by cid (update 提交的cid必须是"//"双斜杠开头，实现/转义字符)
                            example: example: { "cid": "123", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
-        DELETE /cargo/{id} -> delete cargo item by cid 
+        DELETE /cargo/{id} -> delete cargo item by cid  (delete 提交的cid 以"/"单斜杠开头，url参数无需/转义字符)
 
         ------------ (2) hash (not complete yet)------------------
         GET /hashs ->  list all hashs
         GET /hash/{id} -> list a hash by id
         DELETE /hash/{id} -> delete a hash item by id 
+
+        ------------（3）注意 ---------------
+        POST/PUT 必须提供全部字段:(例如)
+             
+        curl -X POST   'http://localhost:5000/cargo'   -H 'Content-Type: application/json; charset=utf-8'   -d '{
+            "cid": "",              // cid 字段必须提交，cid实际自动生成，提交时统一写空字符串""
+            "account": "1234567",   // account 必须提交, 为用户id
+            "mkarr": [              // mkarr 必须提交， 为要上链的数据 hash数组，
+                "1231281",          // 数组每一个成员都是一个文件或者数据的 Hash 摘要值
+                "2323232",
+                "xzzzzzzzy"
+            ],
+            "tstz": 12312312,      // tstz 必须提交，tstz实际自动生成，提交时统一为数字: 0
+            "mkroot":"0",          // mkroot 必须提交，实际自动生成，提交时统一为字符串: "0"
+            "blocknum":"0",        // mkroot 必须提交，实际自动生成，提交时统一为字符串: "0"
+            "done": false          // mkroot 必须提交，实际自动生成，提交时统一为布尔值:false
+        }'
+
     "#
     )
 }
