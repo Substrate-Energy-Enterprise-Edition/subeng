@@ -15,14 +15,46 @@ use log::info;
 // this struct will use to represent cargo database record
 #[derive(Serialize, Deserialize, FromRow, Debug)]
 pub struct CargoRespond {
+    #[serde(default = "default_cid")]
     pub cid: String,
     pub account: String,
+    #[serde(default = "default_tstz")]
     pub tstz: i32,
     pub mkarr: Vec<String>,
+    #[serde(default = "default_mkroot")]
     pub mkroot: String,
+    #[serde(default = "default_blocknum")]
     pub blocknum: String,
+    #[serde(default = "default_done")]
     pub done: bool
 }
+
+//BEGIN-----Deserialize Default Value for CargoRespond------
+
+fn default_cid() -> String {
+    "0".to_string()
+}
+
+fn default_tstz() -> i32 {
+    0
+}
+
+fn default_mkroot() -> String {
+    "0".to_string()
+}
+
+fn default_blocknum() -> String {
+    "0".to_string()
+}
+
+fn default_done() -> bool {
+   false
+}
+
+
+//END---------------------------------------------------
+
+
 
 // this struct will be used to represent hashs database record
 #[derive(Serialize, FromRow, Debug)]
