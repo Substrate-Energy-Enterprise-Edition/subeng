@@ -1,112 +1,23 @@
  curl -X GET   'http: //localhost:5000/cargos'   -H 'Content-Type: application/json'
 
- curl -X POST \
- 'http://localhost:8080' \
+
+
+
+curl -X POST   'http://localhost:5000/cargo'  \
  -H 'Content-Type: application/json; charset=utf-8' \
- -d '{
-   "cid": "x3643deec531c5f24bfa326f038dc8d172c86a2c888869cd24444c82df0c86a73",
-   "account": "123456",
-   "mktree": [
-       "1231231",
-       "2323232",
-       "343434343"
-   ],
-   "done": false
+-d '{  
+  "cid": "123124",
+  "account": "1234567",
+  "mkarr": [
+      "1231281",
+      "2323232",
+      "343434343"
+  ],
+  "tstz": 0,
+  "mkroot":"0",
+  "blocknum":"0",
+  "done": false
 }'
-
-{
-    "cid": "x3643deec531c5f24bfa326f038dc8d172c86a2c888869cd24444c82df0c86a73",
-    "account": "123456",
-    "mktree": [
-        "1231231",
-        "2323232",
-        "343434343"
-    ],
-    "done": "false"
-}
-
-
-
-curl -X POST \
-  'http://localhost:8000/' \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  -d '{
-    "cid": [
-        "1231231",
-        "2323232",
-        "343434343"
-    ]
-}'
-
-
-
-curl -X POST \
-  'http://localhost:5000' \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  -d '{
-    "cid": "\\x3643deec531c5f24bfa326f038dc8d172c86a2c888869cd24444c82df0c86a73",
-    "account": "123456",
-    "mkarr": [
-        "1231231",
-        "2323232",
-        "343434343"
-    ],
-    "done": false
-}'
-
-
-
-
-curl -X POST \
-  'http://localhost:5000/cargo' \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  -d '{
-    "cid": "\\x3643deec531c5f24bfa326f038dc8d172c86a2c888869cd24444c82df0c86a73",
-    "account": "123456",
-    "mkarr": [
-        "1231231",
-        "2323232",
-        "343434343"
-    ],
-    "done": false
-}'
-
-
-
-curl -X POST \
-  'http://localhost:5000/cargo' \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  -d '{
-    "account": "1234567",
-    "mkarr": [
-        "1231281",
-        "2323232",
-        "343434343"
-    ],
-    "done": false
-}'
-
-
-
-
-curl -X POST \
-  'http://localhost:5000/cargo' \
-  -H 'Content-Type: application/json; charset=utf-8' \
-  -d '{
-    "cid": "",
-    "account": "1234567",
-    "mkarr": [
-        "1231281",
-        "2323232",
-        "343434343"
-    ],
-    "tstz": "",
-    "mkroot":"0",
-    "blocknum":"0",
-    "done": false
-}'
-
-
 
 
 

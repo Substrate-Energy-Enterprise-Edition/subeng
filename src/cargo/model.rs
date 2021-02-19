@@ -5,7 +5,10 @@ use sqlx::{FromRow, Row};
 //use sqlx::postgres::PgPool;
 use sqlx::PgPool;
 use sqlx::postgres::PgRow;
-use anyhow::Result;
+//use sqlx::postgres::PgDatabaseError;
+use anyhow::{Result, anyhow};
+use log::info;
+
 //use chrono::{DateTime, TimeZone, NaiveDateTime, Utc};
 
 
@@ -48,52 +51,48 @@ impl Responder for CargoRespond {
 }
 
 
-
-
 // Implementation for CargoRespond struct, functions for read/write/update and delete cargo from database
 impl CargoRespond {
 
-    pub async fn create(cargo: CargoRespond, pool: &PgPool) -> Result<CargoRespond> {
+    pub async fn create(cargo: CargoRespond, pool: &PgPool) ->  Result<u64>   {
+    
+        let mkarr = serde_json::to_string(&cargo.mkarr)?;
+        let  result = sqlx::query!( 
+            r#"
+                INSERT INTO cargo (cid, account, mkarr) VALUES ( digest($1, 'sha256'), $2, $3 ) 
+            "#,
+            &mkarr, 
+            &cargo.account,
+            &cargo.mkarr,
+            )
+            .execute(pool)
+            .await;
 
-        // let mut conn = pool.begin().await.unwrap();
-         println!(" \n cargo sqlx after tx await \n  {} \n", &cargo.account);
-         let mkarr = serde_json::to_string(&cargo.mkarr)?;
- 
-        let cargo = sqlx::query!( 
-             r#"
-                 INSERT INTO cargo (cid, account, mkarr) VALUES ( digest($1, 'sha256'), $2, $3 ) 
-             "#,
-             &mkarr, 
-             &cargo.account,
-             &cargo.mkarr,
-         )
-         .map(|row: PgRow| {
-            CargoRespond{
-                 cid: row.get(0),
-                 account: row.get(1),
-                 tstz: row.get(2),
-                 mkarr: row.get(3),
-                 mkroot: row.get(4),
-                 blocknum: row.get(5),
-                 done: row.get(6)
-             }
-         }) 
-        .fetch_one(pool)
-        .await?;
+        match result {
+            Ok(cargo) => {
+                println!("Insert {} rows ok!", cargo.rows_affected());
+                Ok(cargo.rows_affected())
+            },
+            Err(error) => {
+               println!("Insert error: {}", error);
+               Err( anyhow!("Insert error: {}", error) )
+               /*
+                Sqlx error test:
+                https://github.com/launchbadge/sqlx/blob/master/tests/postgres/postgres.rs
+               */
+            }
+        }
 
-       let cargo1 = serde_json::to_string_pretty(&cargo)?;
+    }
 
-        println!(" \n cargo before OK(cargo) \n {} \n", cargo1);
 
-         Ok(cargo)
-     }
- 
-     pub async fn update(cargo: CargoRespond,  pool: &PgPool) -> Result<CargoRespond> {
+     pub async fn update(cargo: CargoRespond,  pool: &PgPool) -> Result<u64> {
       //  let mut tx = pool.begin().await.unwrap();
-        println!(" \n create cargo update  enter model and cid: \n");
-       
-        
-         let cargo = sqlx::query!(
+
+
+        println!(" \n Update  enter model : {:#?} \n", cargo);
+
+        let result = sqlx::query!(
                  r#"
                  UPDATE cargo SET mkarr = $1, done = $2, account = $3, mkroot = $4, blocknum = $5 WHERE cid = $6 
                  "#,
@@ -103,26 +102,27 @@ impl CargoRespond {
                  &cargo.mkroot,
                  &cargo.blocknum,
                  &cargo.cid
-            )
-             .map(|row: PgRow| {
-                CargoRespond{
-                     cid: row.get(0),
-                     account: row.get(1),
-                     tstz: row.get(2),
-                     mkarr: row.get(3),
-                     mkroot: row.get(4),
-                     blocknum: row.get(5),
-                     done: row.get(6)
-                 }
-             }) 
-             .fetch_one(pool)
+            )             
+             .execute(pool)
              .await?;
 
-             let cargo1 = serde_json::to_string_pretty(&cargo)?;
+        let rows = result.rows_affected();
 
-             println!(" \n update cargo before OK(cargo) \n {} \n", cargo1);
-              
-         Ok(cargo)
+        Ok(rows)
+
+        /*     match rows {
+                Ok(gout) => {
+                    println!("Update {} rows ok!", gout.rows_affected());
+                    Ok(gout.rows_affected())
+                },
+                Err(error) => {
+                   println!("Update error: {}", error);
+                   Err( anyhow!("Update error: {}", error) )
+                }
+            }
+        */
+
+ 
      }
  
      pub async fn delete(cid: String, pool: &PgPool) -> Result<u64> {

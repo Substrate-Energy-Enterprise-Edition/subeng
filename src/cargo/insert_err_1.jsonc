@@ -1,0 +1,18 @@
+
+Database(
+PgDatabaseError{ severity: Error, 
+    code: "23505", 
+    message: "duplicate key value violates unique constraint \"cargo_pkey\"", 
+    detail: Some("Key (cid)=(\\x5085de15a990d7106ab09e8858d062c7a7ac233298d25eacb012972146ee32f1) already exists."), 
+    hint: None, 
+    position: None, 
+    where: None, 
+    schema: Some("public"), 
+    table: Some("cargo"),
+    column: None, 
+    data_type: None, 
+    constraint: Some("cargo_pkey"), 
+    file: Some("nbtinsert.c"), 
+    line: Some(656), 
+    routine: Some("_bt_check_unique")
+})

@@ -2034,6 +2034,7 @@ version = "1.0.62"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea1c6153794552ea7cf7cf63b1231a25de00ec90db326ba6264440fa08e31486"
 dependencies = [
+ "indexmap",
  "itoa",
  "ryu",
  "serde",
@@ -2190,6 +2191,7 @@ dependencies = [
  "sqlx-rt",
  "stringprep",
  "thiserror",
+ "time",
  "url",
  "uuid 0.8.2",
  "whoami",
@@ -2207,6 +2209,7 @@ dependencies = [
  "heck",
  "proc-macro2",
  "quote",
+ "serde_json",
  "sha2",
  "sqlx-core",
  "sqlx-rt",

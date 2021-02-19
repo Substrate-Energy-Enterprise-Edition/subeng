@@ -1,6 +1,6 @@
-#[macro_use]
-extern crate log;
-
+//#[macro_use]
+//extern crate log;
+use log::*;
 use dotenv::dotenv;
 use listenfd::ListenFd;
 use std::env;

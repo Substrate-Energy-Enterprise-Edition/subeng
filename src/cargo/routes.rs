@@ -19,7 +19,7 @@ async fn find(cid: web::Path<String>, db_pool: web::Data<PgPool>) -> impl Respon
     let result = CargoRespond::find_by_id(cid.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(cargo) => HttpResponse::Ok().json(cargo),
-        _ => HttpResponse::BadRequest().body("Cargo not found")
+        _ => HttpResponse::BadRequest().body("Cargo not found \n")
     }
 }
 
@@ -28,38 +28,55 @@ async fn create(cargo: web::Json<CargoRespond>, db_pool: web::Data<PgPool>) -> i
      println!("\n create route create \n");
     let result = CargoRespond::create(cargo.into_inner(), db_pool.get_ref()).await;
     match result {
-        Ok(cargo) => HttpResponse::Ok().json(cargo),
-        _ => HttpResponse::BadRequest().body("Error trying to create new Cargo \n")
+        Ok(rows) => {
+            if rows > 0 {
+                HttpResponse::Ok().body(format!("Successfully inserted {} record(s) \n", rows))
+            } else {
+                HttpResponse::BadRequest().body("!!!Fail insert 0 rows! \n")
+            }
+        },
+        Err(error) => {
+            HttpResponse::BadRequest().body(format!("Fail inserted :{} \n", error))
+        }
     }
     
 }
 
 #[put("/cargo")]
 async fn update(cargo: web::Json<CargoRespond>, db_pool: web::Data<PgPool>) -> impl Responder {
+    
     println!("\n Update route create \n");
+
     let result = CargoRespond::update(cargo.into_inner(),db_pool.get_ref()).await;
-    println!("\n Update route return \n");
     match result {
-        Ok(cargo) => HttpResponse::Ok().json(cargo),
-        _ => HttpResponse::BadRequest().body("Cargo not found")
+        Ok(rows) => {
+            if rows > 0 {
+                HttpResponse::Ok().body(format!("Successfully update {} record(s) \n", rows))
+            } else {
+                HttpResponse::BadRequest().body("!!!Fail update 0 rows! \n")
+            }
+        },
+        Err(error) => {
+            HttpResponse::BadRequest().body(format!("Fail update :{} \n", error))
+        }
     }
 }
 
 #[delete("/cargo/{cid}")]
 async fn delete(cid: web::Path<String>, db_pool: web::Data<PgPool>) -> impl Responder {
-    println!("\n delete route delete \n");
     let result = CargoRespond::delete(cid.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(rows) => {
             if rows > 0 {
-                HttpResponse::Ok().body(format!("Successfully deleted {} record(s)", rows))
+                HttpResponse::Ok().body(format!("Successfully deleted {} record(s) \n", rows))
             } else {
-                HttpResponse::BadRequest().body("Cargo not found")
+                HttpResponse::BadRequest().body("Cargo not found \n")
             }
         },
-        _ => HttpResponse::BadRequest().body("Cargo not found")
+        _ => HttpResponse::BadRequest().body("Cargo not found \n")
     }
 }
+
 
 // function that will be called on new Application to configure routes for this module
 pub fn init(cfg: &mut web::ServiceConfig) {
