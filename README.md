@@ -13,13 +13,15 @@
 *        GET /cargos -> list all cargo 
 *        POST /cargo -> creat cargo item, 
 + example: { "cid": "123", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
-*        GET /cargo/{id} -> list cargo item by cid (list 提交的cid 以"/"单斜杠开头，url参数无需/转义字符)
-*        PUT /cargo    -> update cargo item by cid (update 提交的cid必须是"//"双斜杠开头，实现/转义字符)
+*        GET /cargo/{id} -> list cargo item by cid (列出所有上链数据包)
+*        PUT /cargo    -> update cargo item by cid (update 提交的id必须字段, cid 字段无法修改)
 +  example: { "cid": "123", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
-        DELETE /cargo/{id} -> delete cargo item by cid  (delete 提交的cid 以"/"单斜杠开头，url参数无需/转义字符)
+        DELETE /cargo/{id} -> delete cargo item by cid  (delete 指定id 数据包)
 
 ####       ------------ (2) hash (not complete yet)------------------
  *       GET /hashs ->  list all hashs
+  *      GET /hash-by-cid/{cid} -> list a hash by cid
+ *       DELETE /hash-by-cid/{cid} -> delete a hash item by cid 
  *       GET /hash/{id} -> list a hash by id
  *       DELETE /hash/{id} -> delete a hash item by id 
 
@@ -29,6 +31,7 @@
      curl -X POST   'http://localhost:5000/cargo'  \
       -H 'Content-Type: application/json; charset=utf-8' \
         -d '{
+            "id": -1                // id      [PUT必须], [POST缺省值]: 自增数字
             "cid": "",              // cid     [PUT必须], [POST缺省值]: "0"
             "account": "1234567",   // account [POST/PUT必须]
             "mkarr": [              // mkarr   [POST/PUT必须] 为要上链的数据 hash数组，

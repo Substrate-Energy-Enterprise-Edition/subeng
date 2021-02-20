@@ -43,6 +43,7 @@ async fn index() -> impl Responder {
         curl -X POST   'http://localhost:5000/cargo'  \
         -H 'Content-Type: application/json; charset=utf-8' \
         -d '{
+            "id": -1                // id      [PUT必须], [POST缺省值]: 自增数字
             "cid": "",              // cid     [PUT必须], [POST缺省值]: "0"
             "account": "1234567",   // account [POST/PUT必须]
             "mkarr": [              // mkarr   [POST/PUT必须]  为要上链的数据 hash数组，

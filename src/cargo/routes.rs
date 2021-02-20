@@ -14,9 +14,9 @@ async fn find_all(db_pool: web::Data<PgPool>) -> impl Responder {
     }
 }
 
-#[get("/cargo/{cid}")]
-async fn find(cid: web::Path<String>, db_pool: web::Data<PgPool>) -> impl Responder {
-    let result = CargoRespond::find_by_id(cid.into_inner(), db_pool.get_ref()).await;
+#[get("/cargo/{id}")]
+async fn find(id: web::Path<i64>, db_pool: web::Data<PgPool>) -> impl Responder {
+    let result = CargoRespond::find_by_id(id.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(cargo) => HttpResponse::Ok().json(cargo),
         _ => HttpResponse::BadRequest().body("Cargo not found \n")
@@ -62,9 +62,9 @@ async fn update(cargo: web::Json<CargoRespond>, db_pool: web::Data<PgPool>) -> i
     }
 }
 
-#[delete("/cargo/{cid}")]
-async fn delete(cid: web::Path<String>, db_pool: web::Data<PgPool>) -> impl Responder {
-    let result = CargoRespond::delete(cid.into_inner(), db_pool.get_ref()).await;
+#[delete("/cargo/{id}")]
+async fn delete(id: web::Path<i64>, db_pool: web::Data<PgPool>) -> impl Responder {
+    let result = CargoRespond::delete(id.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(rows) => {
             if rows > 0 {
