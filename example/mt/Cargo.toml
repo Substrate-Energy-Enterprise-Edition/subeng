@@ -1,0 +1,15 @@
+[package]
+name = "mt"
+version = "0.1.0"
+authors = ["maxatbj <iamliqiang@gmail.com>"]
+edition = "2018"
+
+
+[dependencies]
+proptest = "0.8"
+merkle-cbt = "0"
+cfg-if = "0.1"
+
+[features]
+default = ["std"]
+std = []

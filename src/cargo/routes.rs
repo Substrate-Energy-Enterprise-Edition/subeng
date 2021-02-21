@@ -18,15 +18,19 @@ async fn find_all(db_pool: web::Data<PgPool>) -> impl Responder {
 async fn find(id: web::Path<i64>, db_pool: web::Data<PgPool>) -> impl Responder {
     let result = CargoRespond::find_by_id(id.into_inner(), db_pool.get_ref()).await;
     match result {
-        Ok(cargo) => HttpResponse::Ok().json(cargo),
+        Ok(cargo) => { 
+            HttpResponse::Ok().json(cargo)
+        }
         _ => HttpResponse::BadRequest().body("Cargo not found \n")
     }
+
 }
 
 #[post("/cargo")]
 async fn create(cargo: web::Json<CargoRespond>, db_pool: web::Data<PgPool>) -> impl Responder {
      println!("\n create route create \n");
     let result = CargoRespond::create(cargo.into_inner(), db_pool.get_ref()).await;
+  //  let hashop = Hashs::hashop(cargo.into_inner(),db_pool.get_ref()).await;
     match result {
         Ok(rows) => {
             if rows > 0 {

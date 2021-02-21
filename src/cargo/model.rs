@@ -122,9 +122,10 @@ impl CargoRespond {
 
         let  result = sqlx::query!( 
             r#"
-                INSERT INTO cargo (cid, account, mkarr) VALUES ( digest($1, 'sha256'), $2, $3 ) 
+                INSERT INTO cargo (cid, account, mkarr) VALUES ((encode(sha256($1), 'hex')), $2, $3 ) 
             "#,
-            &cidstr, 
+            // (encode(sha256(key_code), 'hex'))   //encode() 结果中没有\x
+            &cidstr.as_bytes(), 
             &cargo.account,
             &cargo.mkarr,
             )
@@ -172,7 +173,6 @@ impl CargoRespond {
         let rows = result.rows_affected();
 
         Ok(rows)
-
         /*     match rows {
                 Ok(gout) => {
                     println!("Update {} rows ok!", gout.rows_affected());
@@ -184,8 +184,6 @@ impl CargoRespond {
                 }
             }
         */
-
- 
      }
  
      pub async fn delete(id: i64, pool: &PgPool) -> Result<u64> {
@@ -258,3 +256,36 @@ impl CargoRespond {
     }
 
 }
+/*
+impl Hash {
+
+    pub async fn hashop(cidstr:&str, varr:vec<String>, pool: &PgPool) ->  Result<u64>   {
+    
+        
+
+        let  result = sqlx::query!( 
+            r#"
+                INSERT INTO cargo (cid, account, mkarr) VALUES ( (encode(sha256($1), 'hex')), $2, $3 ) 
+            "#,
+            &cidstr, 
+            &cargo.account,
+            &cargo.mkarr,
+            )
+            .execute(pool)
+            .await;
+
+        match result {
+            Ok(cargo) => {
+                println!("Insert {} rows ok!", cargo.rows_affected());
+                Ok(cargo.rows_affected())
+            },
+            Err(error) => {
+               println!("Insert error: {}", error);
+               Err( anyhow!("Insert error: {}", error) )
+            }
+        }
+
+    }
+
+}
+*/
