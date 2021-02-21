@@ -30,23 +30,23 @@
 ```
 
  #### ------------（3）注意 ---------------
- ####    POST/PUT 必须提供全部字段,如下例:( 注释自行去除)
+ ####    POST/PUT 模板如下例:( 注释自行去除)
 ``` bash           
      curl -X POST   'http://localhost:5000/cargo'  \
       -H 'Content-Type: application/json; charset=utf-8' \
         -d '{
-            "id": -1                // id      [PUT必须], [POST缺省值]: 自增数字
-            "cid": "",              // cid     [PUT必须], [POST缺省值]: "0"
+            "id": -1                // id      [PUT必须], [POST缺省]: 自增数字
+            "cid": "",              // cid     [PUT必须], [POST缺省]: "0"
             "account": "1234567",   // account [POST/PUT必须]
             "mkarr": [              // mkarr   [POST/PUT必须] 为要上链的数据 hash数组，
-                "1231281",          // 数组每一个成员都是一个文件或者数据的 Hash 摘要值
+                "1231281",                     // 数组每一个成员都是一个文件或者数据的 Hash 摘要值
                 "2323232",
                 "xzzzzzzzy"
             ],
-            "tstz": 12312312,      // tstz   [缺省值]: 0
-            "mkroot":"0",          // mkroot [缺省值]: "0"
-            "blocknum":"0",        // mkroot [缺省值]: "0"
-            "done": false          // mkroot [缺省值]: false
+            "tstz": 12312312,      // tstz   [缺省]: 0
+            "mkroot":"0",          // mkroot [缺省]: "0"
+            "blocknum":"0",        // mkroot [缺省]: "0"
+            "done": false          // mkroot [缺省]: false
         }'
 ``` 
 
