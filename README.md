@@ -1,8 +1,8 @@
 ## SubEng.
-##### --- 2021-02-18 by maxatbj
-### Hackson project-- SEEE.io
+###### 2021-02-18 by maxatbj
+###### Hackson project-- SEEE.io
 
-#### run a browser on  http://localhost:5000 ,you will see below text, and play on it
+##### run a browser on  http://localhost:5000 ,you will see below text, and play on it
 
 
 ### 欢迎来到能源联盟链 SEEE
@@ -13,11 +13,11 @@
 ``` bash   
     GET /cargos -> list all cargo 
     POST /cargo -> creat cargo item, 
-       example: { "cid": "123", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
-    GET /cargo/{id} -> list cargo item by cid (列出所有上链数据包)
-    PUT /cargo    -> update cargo item by cid (update 提交的id必须字段, cid 字段无法修改)
-        example: { "cid": "123", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
-    DELETE /cargo/{id} -> delete cargo item by cid  (delete 指定id 数据包)
+       example: { "id": "1", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
+    GET /cargo/{id} -> list cargo item by id (列出所有上链数据包)
+    PUT /cargo    -> update cargo item by id (update 提交的id必须字段, cid 字段无法修改)
+        example: { "id": "3", "account":"123456", "mktree":[ "1231231", "2323232", "343434343" ] ,  "done": false }
+    DELETE /cargo/{id} -> delete cargo item by id  (delete 指定id 数据包)
 ```    
 
 ####       ------------ (2) hash (not complete yet)------------------
