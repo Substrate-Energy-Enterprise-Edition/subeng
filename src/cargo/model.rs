@@ -11,7 +11,7 @@ use anyhow::{Result, anyhow};
 use chrono::{DateTime, Utc};
 //use chrono::{NaiveDate, NaiveDateTime};
 
-use merkle_cbt::{merkle_tree::Merge, CBMT as ExCBMT};
+use merkle_cbt::{merkle_tree::Merge, CBMT as ExCBMT, MerkleProof};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 
@@ -30,6 +30,7 @@ impl Merge for DefaultHasherU64 {
 }
 
 type CBMT = ExCBMT<u64, DefaultHasherU64>;
+type CBMTProof = MerkleProof<u64, DefaultHasherU64>;
 
 // this struct will use to represent cargo database record
 #[derive(Serialize, Deserialize, FromRow, Debug)]
@@ -96,7 +97,14 @@ pub struct IHash {
     pub proofarr: Vec<String>,  //  proof lemmas  array   （证据节点路径数据）
     #[serde(default = "default_hash_proofindex")]
     pub proofindex: Vec<i32>,  //  proof index （证据叶子节点的索引数- 数组形式, 这里的index是 全二叉树索引cbt）
-
+    #[serde(default = "default_hash_timestamp")]
+    pub timestamp: i32, 
+    #[serde(default = "default_hash_mkarr")]
+    pub mkarr: Vec<String>, 
+    #[serde(default = "default_hash_blocknum")]
+    pub blocknum: String,
+    #[serde(default = "default_hash_bool")]
+    pub done: bool 
 }
 
 //BEGIN-----Deserialize Default Value for CargoRespond------
@@ -128,6 +136,22 @@ fn default_hash_proofarr() -> Vec<String> {
 fn default_hash_proofindex() -> Vec<i32>  {
     vec![0]
 }
+
+fn default_hash_timestamp() -> i32 {
+    0
+}
+
+fn default_hash_mkarr() -> Vec<String> {
+    vec!["0".to_string()]
+}
+
+fn default_hash_blocknum() -> String {
+    "0".to_string()
+}
+
+fn default_hash_bool() -> bool {
+    false
+ }
 //END---------------------------------------------------
 
 
@@ -345,12 +369,15 @@ impl CargoRespond {
 
     pub async fn verify(vreq: VerifyReq,  pool: &PgPool) -> Result<Vec<IHash>> {
         //  let mut tx = pool.begin().await.unwrap();
-          println!(" \n Verify model: {:#?} \n", vreq);
           let mut myhashs = vec![];
           let recs = sqlx::query!(
             r#"
-                SELECT * FROM hashs WHERE cid = $1 AND hashcode = $2 
-                ORDER BY id
+                SELECT hashs.*, cargo.timestamp, cargo.mkarr, cargo.blocknum, cargo.done 
+                   FROM hashs
+                INNER JOIN cargo 
+                ON hashs.cid = cargo.cid
+                WHERE hashs.cid = $1 AND hashs.hashcode = $2  
+                ORDER BY hashs.id;
             "#,
             &vreq.cid,
             &vreq.hashcode
@@ -358,7 +385,58 @@ impl CargoRespond {
         .fetch_all(pool)
         .await?;
 
+        if recs.is_empty() {
+            println!("Verify Input Record Not Found...!!!");
+            return Err( anyhow!("Verify Input Record Not Found !!!") );
+        }
+
         for rec in recs {
+           // verify item
+            // 转换 mkarr<String> 节点数组 到 leaves<u64>  (defaulthaseru64)
+            let leaves: Vec<_> =  rec.mkarr.iter().map(|x| { 
+                let mut hasher = DefaultHasher::new();
+                hasher.write(x.as_bytes());
+                hasher.finish()
+            }).collect();
+            //println!("leaves convert from string: {:#?} => \n u64 : {:#?} ", mkarr, leaves );
+
+            // 计算 mkroot
+            let tree = CBMT::build_merkle_tree(&leaves);
+            
+
+
+            let indices_i32 = rec.proofindex.to_vec();
+            let lemmas_string =  rec.proofarr.to_vec() ;
+            let mut indices: Vec<u32> = Vec::new();
+            let mut lemmas: Vec<u64> = Vec::new();
+ 
+            for iy in indices_i32 .iter() { 
+                indices.push( *iy as u32 );
+            }
+
+            for ix in lemmas_string.iter() { 
+                let val_u64 = ix.parse::<u64>().expect("Error: lemmas String convert to u64 error \n");
+                lemmas.push( val_u64 );
+            }
+
+            // rebuild proof
+            let needed_leaves: Vec<u64> = indices
+            .iter()
+            .map(|i| tree.nodes()[*i as usize].clone())
+            .collect();
+
+            let mkroot = rec.mkroot.parse::<u64>().expect("Error: mkroot String convert to U64 error \n");
+            let rebuild_proof = CBMTProof::new(indices, lemmas);    // 用 indices + lemmas 重建 proof
+            let vok:bool = rebuild_proof.verify(&mkroot, &needed_leaves);    // 用 root 和 indics-leaves 来验证 rproof            
+
+            if vok { 
+                println!("-----Verify OK, the result is : {}", vok);
+            } else {
+                println!("-----Verify Failed, the result is : {}", vok);
+                return Err( anyhow!("Verify Failed, the Result is {}", vok) );
+            }
+
+            // push item in result
             myhashs.push( IHash {
                 id: rec.id as i64,
                 cid: rec.cid,
@@ -367,7 +445,11 @@ impl CargoRespond {
                 hashcode: rec.hashcode,
                 hashcodeu64: rec.hashcodeu64,
                 proofarr: rec.proofarr,
-                proofindex: rec.proofindex
+                proofindex: rec.proofindex,
+                timestamp: rec.timestamp,
+                mkarr: rec.mkarr,
+                blocknum: rec.blocknum,
+                done: rec.done
             });
         }
           Ok(myhashs)
@@ -401,6 +483,10 @@ impl CargoRespond {
 
 /*
 impl iHash {
+
+                SELECT * FROM hashs WHERE cid = $1 AND hashcode = $2 
+                ORDER BY id
+
 
 }
 */

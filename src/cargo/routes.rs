@@ -23,6 +23,7 @@ async fn verify(verify_req: web::Json<VerifyReq>, db_pool: web::Data<PgPool>) ->
     let result = CargoRespond::verify(verify_req.into_inner(), db_pool.get_ref()).await;
     match result {
         Ok(hashs) => HttpResponse::Ok().json(hashs),
+        Err(error) =>HttpResponse::BadRequest().body(format!("Error :{} \n", error)),
         _ => HttpResponse::BadRequest().body("Failed to Verify data..... XXX! \n")
     }
 }

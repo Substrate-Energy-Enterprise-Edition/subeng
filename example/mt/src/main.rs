@@ -15,6 +15,7 @@ impl Merge for DefaultHasherU64 {
 }
 
 type CBMT = ExCBMT<u64, DefaultHasherU64>;
+type CBMTProof = MerkleProof<u64,, DefaultHasherU64>;
 
 fn main() {
 
