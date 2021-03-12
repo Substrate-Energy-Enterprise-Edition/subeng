@@ -14,8 +14,10 @@ dependencies = [
  "futures",
  "listenfd",
  "log",
+ "merkle-cbt",
  "serde",
  "serde_json",
+ "sha2",
  "sqlx",
 ]
 
@@ -1450,6 +1452,15 @@ name = "memchr"
 version = "2.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ee1c47aaa256ecabcaea351eae4a9b01ef39ed810004e298d2511ed284b1525"
+
+[[package]]
+name = "merkle-cbt"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f1ac8428ec02d6caa5a79c15e851d84d5dc7a00df0429a8aa860d104f0a81be"
+dependencies = [
+ "cfg-if 0.1.10",
+]
 
 [[package]]
 name = "mime"

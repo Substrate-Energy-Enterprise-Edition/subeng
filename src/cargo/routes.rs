@@ -1,4 +1,4 @@
-use crate::cargo::{CargoRespond};
+use crate::cargo::{CargoRespond, VerifyReq};
 use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use sqlx::PgPool;
 //use sqlx::postgres::PgPool;
@@ -14,6 +14,20 @@ async fn find_all(db_pool: web::Data<PgPool>) -> impl Responder {
     }
 }
 
+
+
+#[post("/verify")]
+async fn verify(verify_req: web::Json<VerifyReq>, db_pool: web::Data<PgPool>) -> impl Responder {
+    // verify parameters （in hashs tables）: cid and hashcode 
+    println!("\n verify IHash route create \n");
+    let result = CargoRespond::verify(verify_req.into_inner(), db_pool.get_ref()).await;
+    match result {
+        Ok(hashs) => HttpResponse::Ok().json(hashs),
+        _ => HttpResponse::BadRequest().body("Failed to Verify data..... XXX! \n")
+    }
+}
+
+
 #[get("/cargo/{id}")]
 async fn find(id: web::Path<i64>, db_pool: web::Data<PgPool>) -> impl Responder {
     let result = CargoRespond::find_by_id(id.into_inner(), db_pool.get_ref()).await;
@@ -23,28 +37,25 @@ async fn find(id: web::Path<i64>, db_pool: web::Data<PgPool>) -> impl Responder 
         }
         _ => HttpResponse::BadRequest().body("Cargo not found \n")
     }
-
 }
+
+
+
 
 #[post("/cargo")]
 async fn create(cargo: web::Json<CargoRespond>, db_pool: web::Data<PgPool>) -> impl Responder {
-     println!("\n create route create \n");
+     
     let result = CargoRespond::create(cargo.into_inner(), db_pool.get_ref()).await;
-  //  let hashop = Hashs::hashop(cargo.into_inner(),db_pool.get_ref()).await;
     match result {
-        Ok(rows) => {
-            if rows > 0 {
-                HttpResponse::Ok().body(format!("Successfully inserted {} record(s) \n", rows))
-            } else {
-                HttpResponse::BadRequest().body("!!!Fail insert 0 rows! \n")
-            }
+        Ok(cid) => {
+             HttpResponse::Ok().body(format!("Successfully inserted , the record cid is {} \n", cid))
         },
         Err(error) => {
             HttpResponse::BadRequest().body(format!("Fail inserted :{} \n", error))
         }
-    }
-    
+    } 
 }
+
 
 #[put("/cargo")]
 async fn update(cargo: web::Json<CargoRespond>, db_pool: web::Data<PgPool>) -> impl Responder {
@@ -89,4 +100,5 @@ pub fn init(cfg: &mut web::ServiceConfig) {
     cfg.service(create);
     cfg.service(update);
     cfg.service(delete);
+    cfg.service(verify);
 }

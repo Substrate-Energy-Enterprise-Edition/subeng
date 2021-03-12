@@ -31,3 +31,12 @@ curl -X PUT   'http://localhost:5000/cargo'  \
   "done":true
 }'
 
+
+
+curl -X POST   'http://localhost:5000/verify'  \
+ -H 'Content-Type: application/json; charset=utf-8' \
+-d '{  
+  "cid": "019911542ae6168eb1a1a02eba615240a74fa6613e2110929c73c99a9e750f2b",
+  "hashcode": "1231281"
+}'
+

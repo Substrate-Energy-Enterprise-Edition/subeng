@@ -28,6 +28,7 @@ fn main() {
         "10289152030157698709",
     ];
 
+      // 转换 Leaves[&Str] 节点数组 到 leaves[HASHS]
     let leaves: Vec<_> =  leaves_1.iter().map(|x| { 
         let mut hasher = DefaultHasher::new();
         hasher.write(x.as_bytes());
@@ -37,21 +38,61 @@ fn main() {
 
     println!("leaves convert from string: {:#?} => \n u64 : {:#?} ", leaves_1, leaves );
 
+     // 计算 mkroot
     let root = CBMT::build_merkle_root(&leaves);
     println!("merkle root is {}", root);
 
-    // build merkle proof for 42 (its index is 1);
-    let proof = CBMT::build_merkle_proof(&leaves, &[0]).expect("CBMT build merkle proof failed");
+    // build merkle proof for 42 (its index is 2);
+      // 计算 [merkle proof] for 42 (its index is 2);
+    let proof = CBMT::build_merkle_proof(&leaves, &[2]).expect("CBMT build merkle proof failed");
     println!(
-        "merkle proof lemmas are {:?}, indices are {:?}",
+        "merkle proof [2] lemmas are {:?}, indices are {:?}",
         proof.lemmas(),
         proof.indices(),
     );
+
+    let myu64:u64 = 12334026276191850359;
+    let my_string = myu64.to_string();  // `parse()` works with `&str` and `String`!
+
+    println!("---------myu64 convert to string  is  {}", my_string);
+     let my_u64:u64 = my_string.parse().expect("string convert to u64 error");
+     println!("---------mystring convert to u64 is  {}", my_u64);
+ 
     // verify merkle proof
-    let verify_result = proof.verify(&root, &[3584654056691428718]);
-    println!("merkle proof verify result is {}", verify_result);
+    let verify_result = proof.verify(&root, &[12334026276191850359]);
+    println!("---------merkle proof verify result is {}", verify_result);
+
+    let a = ["SDFSDF", "FDGDFGDF", "23423", "56546", "345345345"];
+
+    for (i, v) in a.iter().enumerate() {
+            println!("elem at index {} is {}", i,v);
+    }
 
 
+
+    /*  // rebuild proof
+        
+    fn rebuild_proof() {
+        let leaves = vec![2i32, 3, 5, 7, 11];
+        let tree = CBMTI32::build_merkle_tree(&leaves);
+        let root = tree.root();
+
+        // build proof
+        let proof = tree.build_proof(&[0, 3]).unwrap();
+        let lemmas = proof.lemmas();
+        let indices = proof.indices();
+
+        // rebuild proof
+        let needed_leaves: Vec<i32> = indices
+            .iter()
+            .map(|i| tree.nodes()[*i as usize].clone())
+            .collect();
+        let rebuild_proof = CBMTI32Proof::new(indices.to_vec(), lemmas.to_vec());    // 用 indices + lemmas 重建 rproof
+        assert_eq!(rebuild_proof.verify(&root, &needed_leaves), true);    // 用 root 和 indics-leaves 来验证 rproof                                         
+        assert_eq!(root, rebuild_proof.root(&needed_leaves).unwrap());    // 说明需要 4个属性   1. indices  2. lemmas[]，3. root 4. indics-leaves
+    }
+
+    */
 
 
 
@@ -92,7 +133,7 @@ fn main() {
 
 
         use std::collections::hash_map::{DefaultHasher, RandomState};
-        use std::hash::{BuildHasher, Hasher, Hash};
+        use std::hash::{BuildHasher, Hash};
         
        
             let s = RandomState::new();
