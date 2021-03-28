@@ -1,3 +1,15 @@
+CREATE TABLE IF NOT EXISTS cargo (   
+    id          BIGSERIAL NOT NULL PRIMARY KEY, 
+    cid         text NOT NULL UNIQUE, 
+    account     text NOT NULL,        
+    timestamp   INTEGER NOT NULL DEFAULT EXTRACT(EPOCH FROM NOW()),   
+    mkarr       text[] NOT NULL,         
+    mkroot      text NOT NULL DEFAULT '0',   
+    blocknum    text NOT NULL DEFAULT '0',   
+    done        boolean NOT NULL DEFAULT FALSE   
+);
+
+/*
 CREATE TABLE IF NOT EXISTS cargo (   -- 上传的打包hashs数据包， 简称cargo
     id          BIGSERIAL NOT NULL PRIMARY KEY,  --自增ID    
     cid         text NOT NULL UNIQUE,  -- cargo ID ， 由 mktree + timestamp = $1 字段做sha256运算而来 ->  digest($1, 'sha256')      
@@ -8,8 +20,6 @@ CREATE TABLE IF NOT EXISTS cargo (   -- 上传的打包hashs数据包， 简称c
     blocknum    text NOT NULL DEFAULT '0',    -- blockchain return block-hash 
     done        boolean NOT NULL DEFAULT FALSE    -- lable if block-hash returned and complete writing hash table 
 );
-
-/*
 
 -- First  enable PostgreSQL pgcrypto Extention:
 create extension pgcrypto;

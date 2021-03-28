@@ -1,21 +1,137 @@
-use serde::{Serialize, Deserialize};
-use actix_web::{HttpResponse, HttpRequest, Responder, Error};
+use serde::{
+    Serialize, 
+    Deserialize
+};
+use actix_web::{
+    HttpResponse, 
+    HttpRequest, 
+    Responder, Error
+};
 use futures::future::{ready, Ready};
-use sqlx::{FromRow};
+use sqlx::{
+    FromRow,
+    PgPool
+};
 //use sqlx::postgres::PgPool;
-use sqlx::PgPool;
 //use sqlx::postgres::PgRow;
 //use sqlx::postgres::PgDatabaseError;
-use anyhow::{Result, anyhow};
+use anyhow::{
+    Result, 
+    anyhow
+};
 //use log::info;
-use chrono::{DateTime, Utc};
+use chrono::{
+    DateTime, 
+    Utc
+};
+
 //use chrono::{NaiveDate, NaiveDateTime};
 
-use merkle_cbt::{merkle_tree::Merge, CBMT as ExCBMT, MerkleProof};
+use merkle_cbt::{
+    merkle_tree::Merge, 
+    CBMT as ExCBMT, 
+    MerkleProof
+};
 use std::collections::hash_map::DefaultHasher;
 use std::hash::Hasher;
 
 use sha2::{Sha256, Digest};
+
+// Substrate client usage
+// https://rs-ipfs.github.io/offchain-ipfs-manual/offchain-ipfs-rust.html
+// https://medium.com/@knoldus/interact-with-substrate-nodes-using-light-clients-in-rust-bc9d5ab64e87
+// https://mp.weixin.qq.com/s/uwLnT6wEyjb8LdM4V6k3lg
+
+use sp_keyring::AccountKeyring;
+
+use substrate_subxt::{
+    Call, 
+    ClientBuilder, 
+    EventsDecoder, 
+    PairSigner,
+    balances::*,
+    system::*,
+    ExtrinsicSuccess,
+    DefaultNodeRuntime,
+    NodeTemplateRuntime,
+    Runtime,
+    EventSubscription,
+    sp_core::{ 
+        Encode, 
+        Decode,
+    },
+    register_default_type_sizes,
+    extrinsic::{
+        DefaultExtra,
+ //       PairSigner,
+        SignedExtra,
+        Signer,
+        UncheckedExtrinsic,
+    },
+    EventTypeRegistry
+};
+
+use frame_system::ensure_signed;
+use frame_system::Config as Config;
+
+//use codec::{Encode, Decode};
+
+
+/*
+use sp_runtime::{
+    generic::Header,
+    impl_opaque_keys,
+    traits::{
+        BlakeTwo256,
+        IdentifyAccount,
+        Verify,
+    },
+    MultiSignature,
+    OpaqueExtrinsic,
+};
+
+use sp_std::prelude::*;
+
+*/
+
+/// Concrete type definitions compatible with the node template, with the
+/// contracts pallet enabled.
+///
+/// Inherits types from [`NodeTemplateRuntime`], but adds an implementation for
+/// the contracts pallet trait.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub struct MyNodeRuntime;
+
+impl Runtime for MyNodeRuntime {
+    type Signature = <NodeTemplateRuntime as Runtime>::Signature;
+    type Extra = DefaultExtra<Self>;
+
+    fn register_type_sizes(event_type_registry: &mut EventTypeRegistry<Self>) {
+        event_type_registry.with_system();
+        event_type_registry.with_balances();
+        register_default_type_sizes(event_type_registry);
+    }
+}
+
+impl System for MyNodeRuntime {
+    type Index = <NodeTemplateRuntime as System>::Index;
+    type BlockNumber = <NodeTemplateRuntime as System>::BlockNumber;
+    type Hash = <NodeTemplateRuntime as System>::Hash;
+    type Hashing = <NodeTemplateRuntime as System>::Hashing;
+    type AccountId = <NodeTemplateRuntime as System>::AccountId;
+   // type Address = <NodeTemplateRuntime as System>::Address;
+    type Address = Self::AccountId;
+    type Header = <NodeTemplateRuntime as System>::Header;
+    type Extrinsic = <NodeTemplateRuntime as System>::Extrinsic;
+    type AccountData = <NodeTemplateRuntime as System>::AccountData;
+}
+
+impl Balances for MyNodeRuntime {
+    type Balance = <NodeTemplateRuntime as Balances>::Balance;
+}
+
+/// =======================================/// 
+
 
 pub struct DefaultHasherU64;
 
@@ -154,7 +270,30 @@ fn default_hash_bool() -> bool {
  }
 //END---------------------------------------------------
 
+// =============== subxt extrinsic for templateModule  ===============
+#[derive(Encode)]
+pub struct CreateClaimCall {
+    proof: Vec<u8>,
+}
 
+impl Call<NodeTemplateRuntime> for CreateClaimCall {
+    const MODULE: &'static str = "TemplateModule";
+    const FUNCTION: &'static str = "create_claim";
+}
+
+
+
+#[derive(Encode)]
+pub struct RevokeClaimCall  {
+    proof: Vec<u8>,
+}
+
+impl Call<NodeTemplateRuntime> for RevokeClaimCall  {
+    const MODULE: &'static str = "TemplateModule";
+    const FUNCTION: &'static str = "revoke_claim";
+}
+
+// =END==
 
 
 #[derive(Deserialize,Serialize, Debug)]
@@ -189,16 +328,16 @@ impl CargoRespond {
         let mkarr = serde_json::to_string(&cargo.mkarr)?;
         let now: DateTime<Utc> = Utc::now();
         let _timestr = now.timestamp().to_string();
-        let cidstr:String = format!("{}{}",&mkarr, &cargo.account ); 
+        let cidstr:String = format!("{}{}",&mkarr, &cargo.account );   
 
         // create a Sha256 object
         let mut hasher256 = Sha256::new();
         // write input message
         hasher256.update( cidstr.as_bytes() );
         // read hash digest and consume hasher
-        let s = format!("{:X}", hasher256.finalize());
+        let s = format!("{:X}", hasher256.finalize());   // 从mkarr+account 生成 hash
         let cidhash = s.to_ascii_lowercase();
-        let cid= format!("{}",cidhash);  // copy and return Ok(cid)
+        let cidhash1= format!("{}",cidhash);  // copy cidhash for return Ok(cidhash) later
 
         let  result = sqlx::query!( 
             r#"
@@ -216,7 +355,7 @@ impl CargoRespond {
             Ok(result) => {
                 println!("Insert {} rows ok!", result.rows_affected());
                 let _done = CargoRespond::createhash(cidhash, cargo.account, &cargo.mkarr, pool).await?;
-                Ok( cid )
+                Ok( cidhash1 )
             },
             Err(error) => {
                println!("Insert error: {}", error);
@@ -232,6 +371,7 @@ impl CargoRespond {
 
     pub async fn createhash(cidhash: String, account: String , mkarr: &Vec<String> , pool: &PgPool) ->  Result<()>   {
         // 转换 mkarr<String> 节点数组 到 leaves<u64>  (defaulthaseru64)
+
         let leaves: Vec<_> =  mkarr.iter().map(|x| { 
             let mut hasher = DefaultHasher::new();
             hasher.write(x.as_bytes());
@@ -244,13 +384,20 @@ impl CargoRespond {
         let mkroot = mkroot_u64.to_string();
         println!("merkle root is {}", mkroot);
 
+
+        let cid_mkroot= format!("{}_{}",cidhash,mkroot);  // cid_mkroot 是上链数据
+        println!("On chain data is {}", cid_mkroot);
+        let blockhash = CargoRespond::fncreate_claim(&cid_mkroot).await?;
+
         //写回 mkroot 到 cargo表
         let _done1 = sqlx::query!(
             r#"
-            UPDATE cargo SET mkroot = $1 WHERE cid = $2
+            UPDATE cargo SET mkroot = $1 , blocknum = $2 , done = $3 WHERE cid = $4
             "#,
             &mkroot,
-            &cidhash
+            &blockhash,
+            true,
+            &cidhash,
         )             
         .execute(pool)
         .await?;
@@ -479,14 +626,93 @@ impl CargoRespond {
         })
     }
 
-}
+
+    //================= substrate_api_client ==================
+
 
 /*
-impl iHash {
+    async fn fnmain() -> Result<()> {
 
-                SELECT * FROM hashs WHERE cid = $1 AND hashcode = $2 
-                ORDER BY id
+        let signer = PairSigner::new(AccountKeyring::Alice.pair());
+        let dest = AccountKeyring::Bob.to_account_id().into();
 
-
-}
+        let client = ClientBuilder::<NodeTemplateRuntime>::new().build().await?;
+        let sub = client.subscribe_events().await?;
+        let decoder = client.events_decoder();
+        let mut sub = EventSubscription::<NodeTemplateRuntime>::new(sub, decoder);
+        sub.filter_event::<TransferEvent<_>>();
+        client.transfer(&signer, &dest, 10_000).await?;
+        let raw = sub.next().await.unwrap().unwrap();
+        let event = TransferEvent::<NodeTemplateRuntime>::decode(&mut &raw.data[..]);
+        if let Ok(e) = event {
+            println!("Balance transfer success: value: {:?}", e.amount);
+        } else {
+            println!("Failed to subscribe to Balances::Transfer Event");
+        }
+        Ok(())
+    }  
 */
+
+    async fn fncreate_claim(iproof: &str) -> Result<String> {
+
+        let signer = PairSigner::new(AccountKeyring::Alice.pair());
+        //let dest = AccountKeyring::Bob.to_account_id().into();
+
+        let client = ClientBuilder::<NodeTemplateRuntime>::new().build().await?;
+        let sub = client.subscribe_events().await?;
+        
+        let proof1 = format!("{}",iproof);  // copy proof for use later
+        let cidvec = iproof.as_bytes().to_vec();
+       
+        // Begin to submit extrinsics
+        // create_claim
+        let create_claim = client
+ //           .submit(
+            .watch(
+                CreateClaimCall {
+                    proof: cidvec,
+                },
+                &signer,
+            )
+            .await?;
+
+        println!("\n proof for create_claim: {:?}", proof1 );
+        println!("\n Blockhash for create_claim: {:#?}", create_claim.block.to_string() );
+
+        Ok( create_claim.block.to_string() )
+    }  
+  
+  
+   
+    async fn fnrevoke_claim(iproof: &str) -> Result<()> {
+
+
+        let signer = PairSigner::new(AccountKeyring::Alice.pair());
+        //let dest = AccountKeyring::Bob.to_account_id().into();
+
+        let client = ClientBuilder::<NodeTemplateRuntime>::new().build().await?;
+        let sub = client.subscribe_events().await?;
+        
+        // Begin to submit extrinsics
+        // revoke_claim
+
+         let cidvec = iproof.as_bytes().to_vec();
+
+        let revoke_claim = client
+            .watch(
+                RevokeClaimCall {
+                    proof: cidvec,
+                },
+                &signer,
+            )
+            .await?;
+        println!("\nResult for revoke_claim: {:?}", revoke_claim );
+        
+        Ok(())
+    }  
+
+    //========================================================
+}
+
+
+

@@ -2,7 +2,44 @@
 ###### 2021-02-18 by maxatbj
 ###### Hackson project-- SEEE.io
 
-##### run a browser on  http://localhost:5000 ,you will see below text, and play on it
+
+## 1. install postgreSql database
+$vim .env file
+``` bash   
+HOST=127.0.0.1
+PORT=5000
+DATABASE_URL="postgres://pguser:pgpassword@127.0.0.1/mydb"
+RUST_LOG=sqlx_todo=info,actix=info
+```   
+## 2. add database user  "pguser" with password "pgpassword"
+
+``` bash   
+createdb
+psql
+CREATE USER pguser WITH PASSWORD 'pgpassword';
+DROP DATABASE postgres;
+CREATE DATABASE mydb OWNER pguser;
+GRANT ALL PRIVILEGES ON DATABASE mydb to pguser;
+ALTER ROLE pguser CREATEDB;
+```  
+## 3. run schema-cargo.sql & schema-hash.sql
+``` bash   
+psql -h localhost -U pguser -d mydb -a -f schema-cargo.sql
+psql -h localhost -U pguser -d mydb -a -f schema-hash.sql
+```  
+## 4. run cargo build
+``` bash   
+$ cargo build
+```  
+
+## 5. start server with command:
+``` bash   
+ $./target/debug/actix  
+```   
+
+## 6.  run a browser on  http://localhost:5000 ,you will see below text, and play on it
+
+## 7. play with follow curl command
 
 
 ### 欢迎来到能源联盟链 SEEE
@@ -50,3 +87,37 @@
         }'
 ``` 
 
+
+
+## test command curl
+``` bash   
+
+curl -X GET   'http://localhost:5000/cargos'  -H 'Content-Type: application/json; charset=utf-8'
+
+curl -X GET   'http://localhost:5000/cargo/123456' -H 'Content-Type: application/json; charset=utf-8'
+
+curl -X DELETE   'http://localhost:5000/cargo/123456'  -H 'Content-Type: application/json; charset=utf-8'
+
+
+curl -X POST   'http://localhost:5000/cargo'  \
+ -H 'Content-Type: application/json; charset=utf-8' \
+-d '{  
+  "account": "1234567",
+  "mkarr": [
+      "1231281",
+      "2323232",
+      "343434343"
+  ]
+}'
+
+
+
+curl -X POST   'http://localhost:5000/verify'  \
+ -H 'Content-Type: application/json; charset=utf-8' \
+-d '{  
+  "cid": "019911542ae6168eb1a1a02eba615240a74fa6613e2110929c73c99a9e750f2b",
+  "hashcode": "1231281"
+}'
+
+
+``` 
